@@ -35,5 +35,5 @@ localPort = 5000
 externalPort = 80
 
 [deployment]
-run = ["sh", "-c", "npx serve ."]
+run = ["sh", "-c", "npx serve polytrack-052"]
 deploymentTarget = "cloudrun"
