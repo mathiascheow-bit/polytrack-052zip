@@ -24,6 +24,14 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
 
+initDatabase().then(() => {
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running on http://0.0.0.0:${PORT}`);
+  });
+}).catch(err => {
+  console.error('Failed to initialize database:', err);
+  process.exit(1);
+});
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
