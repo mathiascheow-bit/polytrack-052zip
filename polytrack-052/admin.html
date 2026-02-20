@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PolyTrack Admin</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #0a0e1a;
+      color: #e0e8f0;
+      min-height: 100vh;
+    }
+    .container { max-width: 900px; margin: 0 auto; padding: 30px 20px; }
+    h1 { color: #5ee1ff; margin-bottom: 8px; font-size: 28px; }
+    .subtitle { color: #8899aa; margin-bottom: 30px; font-size: 14px; }
+
+    #loginScreen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 80vh;
+      gap: 16px;
+    }
+    #loginScreen h1 { font-size: 32px; }
+    #loginScreen input {
+      padding: 12px 16px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: 2px solid #334;
+      background: #151a2a;
+      color: #fff;
+      outline: none;
+      width: 280px;
+      text-align: center;
+    }
+    #loginScreen input:focus { border-color: #5ee1ff; }
+    #loginScreen button {
+      padding: 12px 32px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: none;
+      background: #5ee1ff;
+      color: #000;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    #loginScreen button:hover { background: #7feaff; }
+    .login-error { color: #f55; font-size: 14px; min-height: 20px; }
+
+    #adminPanel { display: none; }
+
+    .tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 24px;
+      border-bottom: 2px solid #1a2030;
+      padding-bottom: 0;
+    }
+    .tab {
+      padding: 10px 24px;
+      cursor: pointer;
+      color: #8899aa;
+      border-bottom: 3px solid transparent;
+      font-weight: 600;
+      font-size: 15px;
+      transition: all 0.2s;
+    }
+    .tab:hover { color: #bcc8d4; }
+    .tab.active { color: #5ee1ff; border-bottom-color: #5ee1ff; }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .form-group { margin-bottom: 18px; }
+    .form-group label {
+      display: block;
+      margin-bottom: 6px;
+      color: #8899aa;
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .form-group input, .form-group select {
+      width: 100%;
+      padding: 10px 14px;
+      font-size: 14px;
+      border-radius: 8px;
+      border: 2px solid #1a2535;
+      background: #101520;
+      color: #e0e8f0;
+      outline: none;
+    }
+    .form-group input:focus, .form-group select:focus { border-color: #5ee1ff; }
+    .form-group textarea {
+      width: 100%;
+      padding: 10px 14px;
+      font-size: 13px;
+      font-family: 'Courier New', monospace;
+      border-radius: 8px;
+      border: 2px solid #1a2535;
+      background: #101520;
+      color: #e0e8f0;
+      outline: none;
+      resize: vertical;
+      min-height: 200px;
+    }
+    .form-group textarea:focus { border-color: #5ee1ff; }
+    .form-group .hint { font-size: 12px; color: #556; margin-top: 4px; }
+
+    .color-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    .color-row input[type="color"] {
+      width: 48px;
+      height: 36px;
+      border: 2px solid #1a2535;
+      border-radius: 6px;
+      background: #101520;
+      cursor: pointer;
+      padding: 2px;
+    }
+    .color-row span { font-size: 12px; color: #667; }
+
+    .btn {
+      padding: 12px 28px;
+      font-size: 15px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.2s;
+    }
+    .btn-primary { background: #5ee1ff; color: #000; }
+    .btn-primary:hover { background: #7feaff; }
+    .btn-primary:disabled { background: #334; color: #667; cursor: not-allowed; }
+    .btn-danger { background: #ff4455; color: #fff; font-size: 12px; padding: 6px 14px; }
+    .btn-danger:hover { background: #ff6677; }
+
+    .status-msg {
+      margin-top: 12px;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      display: none;
+    }
+    .status-msg.success { display: block; background: rgba(0,200,100,0.15); color: #5f5; border: 1px solid rgba(0,200,100,0.3); }
+    .status-msg.error { display: block; background: rgba(255,50,50,0.15); color: #f55; border: 1px solid rgba(255,50,50,0.3); }
+
+    .entries-list { display: flex; flex-direction: column; gap: 10px; }
+    .entry-card {
+      display: flex;
+      align-items: center;
+      padding: 14px 18px;
+      background: rgba(255,255,255,0.03);
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.08);
+      gap: 16px;
+    }
+    .entry-info { flex: 1; }
+    .entry-name { font-size: 16px; font-weight: 600; color: #e0e8f0; }
+    .entry-details { font-size: 12px; color: #667; margin-top: 4px; }
+    .entry-track { color: #5ee1ff; font-weight: 600; }
+    .entry-time { color: #aab; }
+    .no-entries { text-align: center; color: #556; padding: 40px; font-size: 16px; }
+
+    .track-id-input-group {
+      display: flex;
+      gap: 8px;
+    }
+    .track-id-input-group input { flex: 1; }
+    .track-id-input-group select { width: 200px; }
+
+    .back-link {
+      display: inline-block;
+      margin-bottom: 20px;
+      color: #5ee1ff;
+      text-decoration: none;
+      font-size: 14px;
+    }
+    .back-link:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="loginScreen">
+      <h1>PolyTrack Admin</h1>
+      <input type="password" id="adminPass" placeholder="Admin password" autofocus>
+      <button id="loginBtn">Login</button>
+      <div class="login-error" id="loginError"></div>
+    </div>
+
+    <div id="adminPanel">
+      <a href="/" class="back-link">&larr; Back to Game</a>
+      <h1>PolyTrack Admin</h1>
+      <p class="subtitle">Manage ghost recordings and leaderboard entries</p>
+
+      <div class="tabs">
+        <div class="tab active" data-tab="add">Add Recording</div>
+        <div class="tab" data-tab="ai">AI Test Driver</div>
+        <div class="tab" data-tab="manage">Manage Entries</div>
+      </div>
+
+      <div class="tab-content active" id="tab-add">
+        <div class="form-group">
+          <label>Player</label>
+          <div class="track-id-input-group">
+            <input type="text" id="playerName" placeholder="e.g. Speed Demon" maxlength="50">
+            <select id="existingPlayer">
+              <option value="">New player</option>
+            </select>
+          </div>
+          <div class="hint">Type a new name or select an existing player to add another track to them.</div>
+        </div>
+
+        <div class="form-group">
+          <label>Track</label>
+          <select id="trackSelect" style="width:100%; margin-bottom:8px;">
+            <option value="">Select a track...</option>
+          </select>
+          <input type="text" id="trackId" placeholder="Or paste track ID hash here (advanced)" style="width:100%;">
+          <div class="hint">Pick a track from the dropdown above. The track must have been played at least once in the game to appear here. You can also paste a raw track hash if needed.</div>
+        </div>
+
+        <div class="form-group">
+          <label>Car Colors</label>
+          <div class="color-row">
+            <input type="color" id="colorPrimary" value="#ff0000"><span>Primary</span>
+            <input type="color" id="colorSecondary" value="#ff0000"><span>Secondary</span>
+            <input type="color" id="colorFrame" value="#ff0000"><span>Frame</span>
+            <input type="color" id="colorRims" value="#ff0000"><span>Rims</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Recording Data</label>
+          <textarea id="recordingData" placeholder="Paste your recording data here, one line per frame:
+0,w
+3933,wd
+4800,w
+6267,wd
+...
+
+Format: milliseconds,keys
+Keys: w=accelerate, a=left, s=brake, d=right"></textarea>
+          <div class="hint">Each line: timestamp in ms, then comma, then active keys (w/a/s/d). Empty keys = no input that frame.</div>
+        </div>
+
+        <button class="btn btn-primary" id="addBtn">Add Recording</button>
+        <div class="status-msg" id="addStatus"></div>
+      </div>
+
+      <div class="tab-content" id="tab-ai">
+        <p style="color:#8899aa; margin-bottom:18px; font-size:14px;">Generate a simulated AI driver recording and submit it to the leaderboard. The AI produces randomized driving inputs (accelerate, steer, brake) to create a test ghost.</p>
+
+        <div class="form-group">
+          <label>Driver Name</label>
+          <input type="text" id="aiDriverName" placeholder="e.g. AI Bot 1" maxlength="50">
+        </div>
+
+        <div class="form-group">
+          <label>Track</label>
+          <select id="aiTrackSelect" style="width:100%;">
+            <option value="">Select a track...</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Race Duration (seconds)</label>
+          <input type="number" id="aiDuration" value="30" min="5" max="300" step="1">
+          <div class="hint">How long the AI will "drive" in seconds (5–300).</div>
+        </div>
+
+        <div class="form-group">
+          <label>Driving Style</label>
+          <select id="aiStyle" style="width:100%;">
+            <option value="cautious">Cautious (lots of braking, gentle turns)</option>
+            <option value="normal" selected>Normal (balanced driving)</option>
+            <option value="aggressive">Aggressive (fast, sharp turns, rare braking)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Car Colors</label>
+          <div class="color-row">
+            <input type="color" id="aiColorPrimary" value="#00aaff"><span>Primary</span>
+            <input type="color" id="aiColorSecondary" value="#0044ff"><span>Secondary</span>
+            <input type="color" id="aiColorFrame" value="#222222"><span>Frame</span>
+            <input type="color" id="aiColorRims" value="#888888"><span>Rims</span>
+          </div>
+        </div>
+
+        <button class="btn btn-primary" id="aiTestBtn">Run AI Test Driver</button>
+        <div class="status-msg" id="aiStatus"></div>
+
+        <div id="aiPreview" style="display:none; margin-top:18px;">
+          <label style="color:#8899aa; font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Generated Recording Preview</label>
+          <textarea id="aiPreviewData" readonly style="width:100%; min-height:120px; padding:10px 14px; font-size:12px; font-family:'Courier New',monospace; border-radius:8px; border:2px solid #1a2535; background:#101520; color:#6a8; margin-top:6px; resize:vertical;"></textarea>
+        </div>
+      </div>
+
+      <div class="tab-content" id="tab-manage">
+        <div class="entries-list" id="entriesList">
+          <div class="no-entries">Loading...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let adminPassword = '';
+
+    document.getElementById('adminPass').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') document.getElementById('loginBtn').click();
+    });
+
+    document.getElementById('loginBtn').addEventListener('click', async () => {
+      const pass = document.getElementById('adminPass').value;
+      const errorEl = document.getElementById('loginError');
+      try {
+        const res = await fetch('/api/admin/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: pass })
+        });
+        if (res.ok) {
+          adminPassword = pass;
+          document.getElementById('loginScreen').style.display = 'none';
+          document.getElementById('adminPanel').style.display = 'block';
+          loadTracks();
+          loadEntries();
+        } else {
+          errorEl.textContent = 'Wrong password';
+        }
+      } catch (e) {
+        errorEl.textContent = 'Connection error';
+      }
+    });
+
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+        if (tab.dataset.tab === 'manage') loadEntries();
+      });
+    });
+
+    document.getElementById('trackSelect').addEventListener('change', (e) => {
+      if (e.target.value) {
+        document.getElementById('trackId').value = e.target.value;
+      }
+    });
+
+    document.getElementById('existingPlayer').addEventListener('change', (e) => {
+      const sel = e.target;
+      if (sel.value) {
+        document.getElementById('playerName').value = sel.options[sel.selectedIndex].dataset.name;
+      }
+    });
+
+    async function loadTracks() {
+      try {
+        const res = await fetch('/api/admin/tracks', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: adminPassword })
+        });
+        const data = await res.json();
+        const select = document.getElementById('trackSelect');
+        select.innerHTML = '<option value="">Select a track...</option>';
+        if (data.tracks) {
+          data.tracks.forEach(t => {
+            const opt = document.createElement('option');
+            opt.value = t.track_id;
+            const label = t.track_name ? friendlyTrackName(t.track_name) : ('Track ' + t.track_id.substring(0, 8) + '...');
+            opt.textContent = label + ' (' + t.player_count + ' players)';
+            select.appendChild(opt);
+          });
+        }
+      } catch (e) {
+        console.error('Error loading tracks:', e);
+      }
+    }
+
+    let allEntries = [];
+    async function loadEntries() {
+      const list = document.getElementById('entriesList');
+      list.innerHTML = '<div class="no-entries">Loading...</div>';
+      try {
+        const res = await fetch('/api/admin/players', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: adminPassword })
+        });
+        const data = await res.json();
+        allEntries = data.entries || [];
+        updateExistingPlayerDropdown();
+        if (!data.entries || data.entries.length === 0) {
+          list.innerHTML = '<div class="no-entries">No recordings yet</div>';
+          return;
+        }
+        list.innerHTML = data.entries.map(e => {
+          const timeSeconds = (e.frames / 60).toFixed(2);
+          const date = new Date(e.created_at).toLocaleDateString();
+          return `
+            <div class="entry-card">
+              <div class="entry-info">
+                <div class="entry-name">${escapeHtml(e.name)}</div>
+                <div class="entry-details">
+                  <span class="entry-track">${escapeHtml(displayTrackName(e))}</span>
+                  &middot; <span class="entry-time">${timeSeconds}s (${e.frames} frames)</span>
+                  &middot; ${date}
+                </div>
+              </div>
+              <button class="btn btn-danger" onclick="deleteEntry(${e.id})">Delete</button>
+            </div>
+          `;
+        }).join('');
+      } catch (e) {
+        list.innerHTML = '<div class="no-entries">Error loading entries</div>';
+      }
+    }
+
+    function updateExistingPlayerDropdown() {
+      const select = document.getElementById('existingPlayer');
+      select.innerHTML = '<option value="">New player</option>';
+      const seen = new Map();
+      for (const e of allEntries) {
+        if (!seen.has(e.user_id)) {
+          seen.set(e.user_id, e.name);
+        }
+      }
+      for (const [uid, name] of seen) {
+        const opt = document.createElement('option');
+        opt.value = uid;
+        opt.dataset.name = name;
+        opt.textContent = name;
+        select.appendChild(opt);
+      }
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    function friendlyTrackName(filename) {
+      if (!filename) return 'Unknown Track';
+      const name = filename.replace('.track', '');
+      const match = name.match(/^([a-zA-Z]+)(\d+)$/);
+      if (match) {
+        return match[1].charAt(0).toUpperCase() + match[1].slice(1) + ' ' + match[2];
+      }
+      if (name.length > 20) return name.substring(0, 12) + '...';
+      return name;
+    }
+
+    function displayTrackName(entry) {
+      if (entry.track_name) return friendlyTrackName(entry.track_name);
+      return 'Track ' + entry.track_id.substring(0, 8) + '...';
+    }
+
+    function colorToHex(colorInput) {
+      return colorInput.replace('#', '');
+    }
+
+    document.getElementById('addBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('addBtn');
+      const status = document.getElementById('addStatus');
+      const playerName = document.getElementById('playerName').value.trim();
+      const trackId = document.getElementById('trackId').value.trim();
+      const rawRecording = document.getElementById('recordingData').value.trim();
+
+      const carColors = colorToHex(document.getElementById('colorPrimary').value)
+        + colorToHex(document.getElementById('colorSecondary').value)
+        + colorToHex(document.getElementById('colorFrame').value)
+        + colorToHex(document.getElementById('colorRims').value);
+
+      if (!playerName) { showStatus(status, 'error', 'Enter a player name'); return; }
+      if (!trackId) { showStatus(status, 'error', 'Enter or select a track ID'); return; }
+      if (!rawRecording) { showStatus(status, 'error', 'Paste recording data'); return; }
+
+      btn.disabled = true;
+      btn.textContent = 'Adding...';
+
+      const existingUserId = document.getElementById('existingPlayer').value || undefined;
+
+      try {
+        const res = await fetch('/api/admin/add-recording', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            password: adminPassword,
+            playerName,
+            trackId,
+            rawRecording,
+            carColors,
+            existingUserId: existingUserId ? parseInt(existingUserId) : undefined
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showStatus(status, 'success', `Successfully added "${playerName}" to the leaderboard!`);
+          document.getElementById('playerName').value = '';
+          document.getElementById('recordingData').value = '';
+          document.getElementById('existingPlayer').value = '';
+          loadTracks();
+          loadEntries();
+        } else {
+          showStatus(status, 'error', data.error || 'Failed to add recording. Please check your data and try again.');
+        }
+      } catch (e) {
+        showStatus(status, 'error', 'Could not connect to the server. Please try again.');
+      }
+
+      btn.disabled = false;
+      btn.textContent = 'Add Recording';
+    });
+
+    async function deleteEntry(id) {
+      if (!confirm('Delete this recording? This cannot be undone.')) return;
+      try {
+        const res = await fetch('/api/admin/delete-recording', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: adminPassword, leaderboardId: id })
+        });
+        const data = await res.json();
+        if (data.success) {
+          loadEntries();
+          loadTracks();
+        } else {
+          alert(data.error || 'Failed to delete');
+        }
+      } catch (e) {
+        alert('Connection error');
+      }
+    }
+
+    function showStatus(el, type, msg) {
+      el.className = 'status-msg ' + type;
+      el.textContent = msg;
+      if (type === 'success') {
+        setTimeout(() => { el.className = 'status-msg'; }, 5000);
+      }
+    }
+
+    function generateAIRecording(durationSec, style) {
+      const lines = [];
+      const totalMs = durationSec * 1000;
+      const profiles = {
+        cautious:    { accelChance: 0.85, steerInterval: [800,2000], steerDuration: [300,800],  brakeChance: 0.25, brakeInterval: [2000,5000], brakeDuration: [200,600] },
+        normal:      { accelChance: 0.92, steerInterval: [500,1500], steerDuration: [200,700],  brakeChance: 0.12, brakeInterval: [3000,7000], brakeDuration: [100,400] },
+        aggressive:  { accelChance: 0.97, steerInterval: [300,1000], steerDuration: [150,500],  brakeChance: 0.05, brakeInterval: [5000,10000], brakeDuration: [50,200] }
+      };
+      const p = profiles[style] || profiles.normal;
+      function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+      let accel = true;
+      let steerDir = null;
+      let braking = false;
+
+      let nextSteerToggle = rand(p.steerInterval[0], p.steerInterval[1]);
+      let steerEndMs = 0;
+      let nextBrakeToggle = rand(p.brakeInterval[0], p.brakeInterval[1]);
+      let brakeEndMs = 0;
+
+      const step = 50;
+      for (let ms = 0; ms <= totalMs; ms += step) {
+        if (ms >= nextSteerToggle && steerDir === null) {
+          steerDir = Math.random() < 0.5 ? 'a' : 'd';
+          steerEndMs = ms + rand(p.steerDuration[0], p.steerDuration[1]);
+        }
+        if (steerDir && ms >= steerEndMs) {
+          steerDir = null;
+          nextSteerToggle = ms + rand(p.steerInterval[0], p.steerInterval[1]);
+        }
+
+        if (ms >= nextBrakeToggle && !braking && Math.random() < p.brakeChance) {
+          braking = true;
+          accel = false;
+          brakeEndMs = ms + rand(p.brakeDuration[0], p.brakeDuration[1]);
+        }
+        if (braking && ms >= brakeEndMs) {
+          braking = false;
+          accel = Math.random() < p.accelChance;
+          nextBrakeToggle = ms + rand(p.brakeInterval[0], p.brakeInterval[1]);
+        }
+        if (!braking && !accel && Math.random() < 0.3) {
+          accel = true;
+        }
+
+        let keys = '';
+        if (accel) keys += 'w';
+        if (steerDir) keys += steerDir;
+        if (braking) keys += 's';
+
+        lines.push(ms + ',' + keys);
+      }
+      return lines.join('\n');
+    }
+
+    function loadAITracks() {
+      const select = document.getElementById('aiTrackSelect');
+      const source = document.getElementById('trackSelect');
+      select.innerHTML = '<option value="">Select a track...</option>';
+      for (const opt of source.options) {
+        if (opt.value) {
+          const clone = opt.cloneNode(true);
+          select.appendChild(clone);
+        }
+      }
+    }
+
+    document.getElementById('aiTestBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('aiTestBtn');
+      const status = document.getElementById('aiStatus');
+      const name = document.getElementById('aiDriverName').value.trim();
+      const trackId = document.getElementById('aiTrackSelect').value;
+      const duration = parseInt(document.getElementById('aiDuration').value) || 30;
+      const style = document.getElementById('aiStyle').value;
+
+      if (!name) { showStatus(status, 'error', 'Enter a driver name'); return; }
+      if (!trackId) { showStatus(status, 'error', 'Select a track'); return; }
+      if (duration < 5 || duration > 300) { showStatus(status, 'error', 'Duration must be 5–300 seconds'); return; }
+
+      btn.disabled = true;
+      btn.textContent = 'Generating & Submitting...';
+
+      const rawRecording = generateAIRecording(duration, style);
+
+      document.getElementById('aiPreview').style.display = 'block';
+      const previewLines = rawRecording.split('\n');
+      document.getElementById('aiPreviewData').value =
+        previewLines.slice(0, 20).join('\n') +
+        (previewLines.length > 20 ? '\n... (' + previewLines.length + ' total lines)' : '');
+
+      const carColors =
+        colorToHex(document.getElementById('aiColorPrimary').value) +
+        colorToHex(document.getElementById('aiColorSecondary').value) +
+        colorToHex(document.getElementById('aiColorFrame').value) +
+        colorToHex(document.getElementById('aiColorRims').value);
+
+      try {
+        const res = await fetch('/api/admin/add-recording', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            password: adminPassword,
+            playerName: name,
+            trackId,
+            rawRecording,
+            carColors
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showStatus(status, 'success', `AI driver "${name}" added to leaderboard! (${duration}s, ${style} style)`);
+          loadEntries();
+          loadTracks();
+        } else {
+          showStatus(status, 'error', data.error || 'Failed to submit AI recording');
+        }
+      } catch (e) {
+        showStatus(status, 'error', 'Connection error');
+      }
+
+      btn.disabled = false;
+      btn.textContent = 'Run AI Test Driver';
+    });
+
+    const origLoadTracks = loadTracks;
+    loadTracks = async function() {
+      await origLoadTracks();
+      loadAITracks();
+    };
+  </script>
+</body>
+</html>

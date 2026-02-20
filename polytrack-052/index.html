@@ -1,0 +1,624 @@
+<!doctype html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,viewport-fit=cover,user-scalable=no">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <meta name="theme-color" content="#000000">
+
+    <title>PolyTrack Version 0.5.2</title>
+
+    <!-- Favicon (GitHub version) -->
+    <link rel="icon" type="image/png" href="./favicon.ico">
+    <link rel="shortcut icon" type="image/png" href="./favicon.ico">
+    <link rel="apple-touch-icon" href="./favicon.ico">
+
+    <link rel="preload" href="./forced_square.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+    <link rel="preload" href="./images/logo.svg" as="image" type="image/svg+xml">
+    <link rel="preload" href="./images/discord.svg" as="image" type="image/svg+xml">
+    <link rel="manifest" href="./manifest.json">
+
+    <style>
+      :root{
+        --brand:#5ee1ff;
+        --glow:0 0 12px rgba(94,225,255,.65), 0 0 32px rgba(155,255,183,.35);
+        --shadow:0 10px 30px rgba(0,0,0,.4);
+      }
+      html, body{ margin:0; height:100%; background:#000; color:#eaf4ff; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; }
+      body{ overflow:hidden; }
+
+      /* Lock Mode Overlay */
+      #lockOverlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: #000;
+        z-index: 10000;
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-family: system-ui, -apple-system, sans-serif;
+      }
+      #lockOverlay h1 { color: #5ee1ff; margin-bottom: 20px; }
+      #lockOverlay input {
+        padding: 10px;
+        font-size: 16px;
+        border-radius: 8px;
+        border: 1px solid #5ee1ff;
+        background: #1a1a1a;
+        color: #fff;
+        outline: none;
+      }
+      #lockOverlay button {
+        margin-top: 15px;
+        padding: 10px 20px;
+        font-size: 16px;
+        border-radius: 8px;
+        border: none;
+        background: #5ee1ff;
+        color: #000;
+        cursor: pointer;
+        font-weight: bold;
+      }
+
+      /* Admin Lock Button */
+      #adminLockButton {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        z-index: 9999;
+        background: rgba(255, 68, 68, 0.3);
+        border: 1px solid #ff4444;
+        color: #ff4444;
+        padding: 5px 10px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 10px;
+        opacity: 0.3;
+        transition: opacity 0.3s;
+      }
+      #adminLockButton:hover { opacity: 1; }
+
+      /* Admin Panel Link */
+      #adminPanelLink {
+        position: fixed;
+        bottom: 20px;
+        left: 80px;
+        z-index: 9999;
+        background: rgba(94, 225, 255, 0.15);
+        border: 1px solid rgba(94, 225, 255, 0.3);
+        color: #5ee1ff;
+        padding: 5px 10px;
+        border-radius: 5px;
+        font-size: 10px;
+        opacity: 0;
+        transition: opacity 0.3s;
+        text-decoration: none;
+        cursor: pointer;
+      }
+      #adminPanelLink:hover { opacity: 1; }
+
+      /* Overall Leaderboard Button - Hidden, only injected version shows */
+      #overallLeaderboardBtn {
+        display: none !important;
+      }
+
+      /* Overall Leaderboard Panel - Full Screen */
+      #overallLeaderboardPanel {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 10001;
+        background: linear-gradient(135deg, rgba(15,20,35,0.98), rgba(10,15,25,0.99));
+        padding: 40px;
+        box-sizing: border-box;
+        overflow-y: auto;
+        font-family: system-ui, sans-serif;
+        color: #fff;
+      }
+      #overallLeaderboardPanel > div:first-child {
+        max-width: 800px;
+        margin: 0 auto;
+      }
+      #prizeCountdownBanner {
+        max-width: 800px;
+        margin: 0 auto 20px auto;
+        background: linear-gradient(135deg, #ff6b35, #f7931e);
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+        box-shadow: 0 4px 20px rgba(255,107,53,0.4);
+        animation: pulse-glow 2s ease-in-out infinite;
+      }
+      @keyframes pulse-glow {
+        0%, 100% { box-shadow: 0 4px 20px rgba(255,107,53,0.4); }
+        50% { box-shadow: 0 4px 30px rgba(255,107,53,0.7); }
+      }
+      .prize-text {
+        font-size: 18px;
+        font-weight: bold;
+        color: #fff;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        margin-bottom: 10px;
+      }
+      .mystery-prize {
+        color: #ffe066;
+        font-size: 22px;
+        text-transform: uppercase;
+        animation: shimmer 1.5s ease-in-out infinite;
+      }
+      @keyframes shimmer {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
+      }
+      .countdown {
+        font-size: 32px;
+        font-weight: bold;
+        color: #fff;
+        font-family: 'Courier New', monospace;
+        background: rgba(0,0,0,0.3);
+        padding: 10px 20px;
+        border-radius: 8px;
+        display: inline-block;
+      }
+      .countdown.expired {
+        background: rgba(255,0,0,0.3);
+        color: #ffaaaa;
+      }
+      #overallLeaderboardHeader {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+      #overallLeaderboardHeader h2 {
+        margin: 0;
+        font-size: 32px;
+        color: #4488ff;
+      }
+      #closeOverallLeaderboard {
+        color: #ff5555;
+        cursor: pointer;
+        font-size: 28px;
+        padding: 8px 16px;
+        border-radius: 8px;
+        background: rgba(255,85,85,0.1);
+        border: 2px solid #ff5555;
+      }
+      #closeOverallLeaderboard:hover { background: rgba(255,85,85,0.3); }
+      #overallLeaderboardList {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        max-width: 800px;
+        margin: 0 auto;
+      }
+      .overall-entry {
+        display: flex;
+        align-items: center;
+        padding: 18px 24px;
+        background: rgba(255,255,255,0.05);
+        border-radius: 12px;
+        border: 2px solid rgba(255,255,255,0.1);
+      }
+      .overall-entry.top-3 { border-color: gold; background: rgba(255,215,0,0.15); }
+      .overall-rank {
+        font-size: 24px;
+        font-weight: bold;
+        width: 60px;
+        color: #4488ff;
+      }
+      .overall-entry.top-3 .overall-rank { color: gold; }
+      .overall-name {
+        flex: 1;
+        font-size: 20px;
+        margin-left: 15px;
+      }
+      .overall-stats {
+        text-align: right;
+        font-size: 16px;
+      }
+      .overall-avg { color: #5ee1ff; font-weight: bold; font-size: 20px; }
+      .overall-races { color: #aaa; margin-top: 4px; }
+      .overall-subtitle {
+        font-size: 14px;
+        color: #aaa;
+        max-width: 800px;
+        margin: 0 auto 20px auto;
+      }
+
+    </style>
+
+    <script>
+      (function() {
+        const ORIGINAL_APIS = [
+          'https://vps.kodub.com/',
+          'https://polytrack-backend.htmlunblockedgames.workers.dev/'
+        ];
+        const OUR_API = window.location.origin + '/';
+        
+        const originalOpen = XMLHttpRequest.prototype.open;
+        XMLHttpRequest.prototype.open = function(method, url, ...rest) {
+          if (typeof url === 'string') {
+            for (const api of ORIGINAL_APIS) {
+              if (url.startsWith(api)) {
+                url = url.replace(api, OUR_API);
+                break;
+              }
+            }
+          }
+          return originalOpen.call(this, method, url, ...rest);
+        };
+        
+        const originalFetch = window.fetch;
+        window.fetch = function(url, ...rest) {
+          if (typeof url === 'string') {
+            for (const api of ORIGINAL_APIS) {
+              if (url.startsWith(api)) {
+                url = url.replace(api, OUR_API);
+                break;
+              }
+            }
+          }
+          return originalFetch.call(this, url, ...rest);
+        };
+      })();
+    </script>
+    <script defer="defer" src="./error_screen.bundle.js"></script>
+    <script defer="defer" src="./main.bundle.js"></script>
+  </head>
+
+  <body>
+    <div id="lockOverlay">
+      <h1>Access Locked</h1>
+      <p>Please enter the password to continue.</p>
+      <input type="password" id="lockPassword" placeholder="Enter password">
+      <button id="unlockButton">Unlock</button>
+      <p style="margin-top: 20px; font-size: 13px; color: #8899aa;">Need help? Contact <a href="mailto:h43456847@gmail.com" style="color: #5ee1ff;">h43456847@gmail.com</a></p>
+    </div>
+    <div id="adminLockButton">LOCK</div>
+    <a id="adminPanelLink" href="/admin.html">ADMIN</a>
+    <div id="overallLeaderboardBtn">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M5 3h14v2h-1v1c0 2.55-1.16 4.83-3 6.32V14h-6v-1.68c-1.84-1.49-3-3.77-3-6.32V5H5V3zm3 3v1c0 1.97.83 3.75 2.16 5H13.84c1.33-1.25 2.16-3.03 2.16-5V6H8zm-4 13h16v2H4v-2zm8-4c1.1 0 2 .9 2 2H10c0-1.1.9-2 2-2z"/></svg>
+      <span>Rankings</span>
+    </div>
+    <div id="overallLeaderboardPanel">
+      <div id="prizeCountdownBanner">
+        <div class="prize-text">🏆 Top 3 players when timer ends win a <span class="mystery-prize">MYSTERY PRIZE</span>! 🏆</div>
+        <div id="countdownTimer" class="countdown">Loading...</div>
+      </div>
+      <div id="overallLeaderboardHeader">
+        <h2>Overall Rankings</h2>
+        <span id="closeOverallLeaderboard">✕</span>
+      </div>
+      <p class="overall-subtitle">Average rank across all tracks - lower is better!</p>
+      <div id="overallLeaderboardList"></div>
+    </div>
+    <canvas id="screen"></canvas>
+    <div id="ui"></div>
+    <div id="transition-layer"></div>
+
+
+    <script>
+      // Lock Mode Logic - Global Lock via Server + Local Unlock Option
+      (function() {
+        const overlay = document.getElementById('lockOverlay');
+        const passInput = document.getElementById('lockPassword');
+        const unlockBtn = document.getElementById('unlockButton');
+        const lockBtn = document.getElementById('adminLockButton');
+        let currentLockState = null;
+        
+        const LOCAL_UNLOCK_KEY = 'polytrack_local_unlock';
+
+        async function checkLockStatus() {
+          try {
+            const response = await fetch('/api/lock-status');
+            const data = await response.json();
+            return data.locked;
+          } catch (error) {
+            console.error('Error checking lock status:', error);
+            return false;
+          }
+        }
+        
+        function isLocallyUnlocked() {
+          return localStorage.getItem(LOCAL_UNLOCK_KEY) === 'true';
+        }
+        
+        function setLocalUnlock(value) {
+          if (value) {
+            localStorage.setItem(LOCAL_UNLOCK_KEY, 'true');
+          } else {
+            localStorage.removeItem(LOCAL_UNLOCK_KEY);
+          }
+        }
+
+        async function updateLockUI() {
+          const globalLocked = await checkLockStatus();
+          
+          // Clear local unlock when game is globally unlocked
+          if (!globalLocked) {
+            setLocalUnlock(false);
+          }
+          
+          if (globalLocked !== currentLockState && currentLockState !== null) {
+            if (globalLocked) {
+              setLocalUnlock(false);
+            }
+          }
+          currentLockState = globalLocked;
+          
+          if (globalLocked && !isLocallyUnlocked()) {
+            overlay.style.display = 'flex';
+          } else {
+            overlay.style.display = 'none';
+          }
+        }
+
+        unlockBtn.onclick = async () => {
+          const enteredPassword = passInput.value;
+          
+          // Check for local-only unlock password first (verified server-side)
+          try {
+            const localRes = await fetch('/api/verify-local-unlock', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ password: enteredPassword })
+            });
+            const localData = await localRes.json();
+            if (localData.valid) {
+              setLocalUnlock(true);
+              overlay.style.display = 'none';
+              passInput.value = '';
+              return;
+            }
+          } catch (e) {}
+          
+          // Otherwise try global unlock
+          try {
+            const response = await fetch('/api/lock', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ password: enteredPassword, action: 'unlock' })
+            });
+            const data = await response.json();
+            if (data.success) {
+              overlay.style.display = 'none';
+              passInput.value = '';
+              currentLockState = false;
+            } else {
+              alert('Incorrect password');
+            }
+          } catch (error) {
+            alert('Error unlocking game');
+          }
+          passInput.value = '';
+        };
+
+        lockBtn.onclick = async () => {
+          const pass = prompt('Enter admin password to LOCK the game:');
+          if (pass === null) return;
+          try {
+            const response = await fetch('/api/lock', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ password: pass, action: 'lock' })
+            });
+            const data = await response.json();
+            if (data.success) {
+              setLocalUnlock(false);
+              currentLockState = true;
+              overlay.style.display = 'flex';
+            } else {
+              alert('Incorrect password');
+            }
+          } catch (error) {
+            alert('Error locking game');
+          }
+        };
+
+        setInterval(updateLockUI, 2000);
+        updateLockUI();
+      })();
+
+      // 100 Hour Countdown Timer for Mystery Prize (Global - synced from server)
+      (function() {
+        const timerEl = document.getElementById('countdownTimer');
+        let globalEndTime = null;
+        
+        async function fetchEndTime() {
+          try {
+            const response = await fetch('/api/countdown');
+            const data = await response.json();
+            globalEndTime = data.endTime;
+          } catch (error) {
+            console.error('Error fetching countdown:', error);
+          }
+        }
+        
+        function formatTime(ms) {
+          if (ms <= 0) return 'TIME UP!';
+          const totalSeconds = Math.floor(ms / 1000);
+          const hours = Math.floor(totalSeconds / 3600);
+          const minutes = Math.floor((totalSeconds % 3600) / 60);
+          const seconds = totalSeconds % 60;
+          return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+        
+        function updateCountdown() {
+          if (globalEndTime === null) {
+            timerEl.textContent = 'Loading...';
+            return;
+          }
+          const remaining = globalEndTime - Date.now();
+          timerEl.textContent = formatTime(remaining);
+          if (remaining <= 0) {
+            timerEl.classList.add('expired');
+          } else {
+            timerEl.classList.remove('expired');
+          }
+        }
+        
+        // Fetch end time from server, then update every second
+        fetchEndTime().then(() => {
+          updateCountdown();
+          setInterval(updateCountdown, 1000);
+        });
+        
+        // Refresh from server periodically to stay in sync
+        setInterval(fetchEndTime, 60000);
+      })();
+
+      // Overall Leaderboard Logic - Inject into game menu
+      (function() {
+        const panel = document.getElementById('overallLeaderboardPanel');
+        const closeBtn = document.getElementById('closeOverallLeaderboard');
+        const listEl = document.getElementById('overallLeaderboardList');
+
+        async function loadOverallLeaderboard() {
+          listEl.innerHTML = '<p style="color:#aaa;text-align:center;font-size:18px;">Loading...</p>';
+          try {
+            const response = await fetch('/api/overall-leaderboard');
+            const data = await response.json();
+            
+            if (!data.entries || data.entries.length === 0) {
+              listEl.innerHTML = '<p style="color:#aaa;text-align:center;font-size:18px;">No rankings yet. Complete some races!</p>';
+              return;
+            }
+
+            listEl.innerHTML = data.entries.map(entry => `
+              <div class="overall-entry ${entry.rank <= 3 ? 'top-3' : ''}">
+                <span class="overall-rank">#${entry.rank}</span>
+                <span class="overall-name">${entry.name}</span>
+                <div class="overall-stats">
+                  <div class="overall-avg">${entry.averageRank.toFixed(2)} pts</div>
+                  <div class="overall-races">${entry.raceCount}/${entry.totalTracks} tracks</div>
+                </div>
+              </div>
+            `).join('');
+          } catch (error) {
+            listEl.innerHTML = '<p style="color:#f55;text-align:center;font-size:18px;">Error loading rankings</p>';
+          }
+        }
+
+        function openPanel() {
+          panel.style.display = 'block';
+          loadOverallLeaderboard();
+        }
+
+        closeBtn.onclick = () => {
+          panel.style.display = 'none';
+        };
+
+        panel.onclick = (e) => {
+          if (e.target === panel) panel.style.display = 'none';
+        };
+
+        // Inject Rankings button into game menu as a completely separate button
+        function injectRankingsButton() {
+          const ui = document.getElementById('ui');
+          if (!ui || document.getElementById('injectedRankingsBtn')) return;
+          
+          // Find all menu buttons by their text
+          const allElements = ui.querySelectorAll('*');
+          let targetButtons = [];
+          
+          allElements.forEach(el => {
+            const text = (el.textContent || '').trim().toLowerCase();
+            // Find standalone buttons like Play, Profile, Settings, Editor
+            if (['play', 'profile', 'settings', 'editor'].includes(text) && el.children.length <= 2) {
+              targetButtons.push(el);
+            }
+          });
+          
+          if (targetButtons.length > 0) {
+            // Get the first menu button to use as template and find its parent row
+            const templateButton = targetButtons[0];
+            
+            // Find the row container (parent that contains multiple buttons)
+            let rowContainer = templateButton.parentElement;
+            
+            // Keep going up until we find a container that has multiple button children
+            while (rowContainer && rowContainer.children.length < 2) {
+              rowContainer = rowContainer.parentElement;
+            }
+            
+            if (rowContainer) {
+              // Clone the template button's immediate wrapper (if there is one)
+              let buttonWrapper = templateButton;
+              
+              // If template is wrapped in a div, clone the wrapper
+              if (templateButton.parentElement !== rowContainer) {
+                buttonWrapper = templateButton.parentElement;
+              }
+              
+              // Clone the whole wrapper structure
+              const rankBtnWrapper = buttonWrapper.cloneNode(true);
+              rankBtnWrapper.id = 'injectedRankingsBtn';
+              
+              // Find and update all text nodes to say "Rankings"
+              const walker = document.createTreeWalker(rankBtnWrapper, NodeFilter.SHOW_TEXT, null, false);
+              while (walker.nextNode()) {
+                const txt = walker.currentNode.textContent.trim().toLowerCase();
+                if (['play', 'profile', 'settings', 'editor'].includes(txt)) {
+                  walker.currentNode.textContent = 'Rankings';
+                }
+              }
+              
+              // Update any SVG icon to a trophy
+              const svgs = rankBtnWrapper.querySelectorAll('svg');
+              svgs.forEach(svg => {
+                svg.innerHTML = '<path d="M5 3h14v2h-1v1c0 2.55-1.16 4.83-3 6.32V14h-6v-1.68c-1.84-1.49-3-3.77-3-6.32V5H5V3zm3 3v1c0 1.97.83 3.75 2.16 5H13.84c1.33-1.25 2.16-3.03 2.16-5V6H8zm-4 13h16v2H4v-2zm8-4c1.1 0 2 .9 2 2H10c0-1.1.9-2 2-2z" fill="currentColor"/>';
+              });
+              
+              // Make clickable
+              rankBtnWrapper.style.cursor = 'pointer';
+              rankBtnWrapper.onclick = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                openPanel();
+              };
+              
+              // Insert as a sibling to the existing buttons at the row level
+              rowContainer.appendChild(rankBtnWrapper);
+            }
+          }
+        }
+        
+        // Keep trying to inject until successful
+        const injectionInterval = setInterval(() => {
+          if (!document.getElementById('injectedRankingsBtn')) {
+            injectRankingsButton();
+          }
+        }, 500);
+        
+        // Also try on mutation
+        const ui = document.getElementById('ui');
+        if (ui) {
+          const observer = new MutationObserver(() => {
+            if (!document.getElementById('injectedRankingsBtn')) {
+              injectRankingsButton();
+            }
+          });
+          observer.observe(ui, { childList: true, subtree: true });
+        }
+      })();
+
+      // Leave warning
+      window.onbeforeunload = () => "Are you sure you want to leave? Your session may be interrupted.";
+
+    </script>
+
+  </body>
+</html>
