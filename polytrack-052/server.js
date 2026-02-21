@@ -127,14 +127,19 @@ async function initDatabase() {
     console.log('Banners table already exists or error creating:', e.message);
   }
 
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS chats (
-      id SERIAL PRIMARY KEY,
-      user_id INTEGER REFERENCES users(id),
-      message TEXT NOT NULL,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
+  // Chats table handled manually or if not exists
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS chats (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id),
+        message TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+  } catch (e) {
+    console.log('Chats table already exists or error creating:', e.message);
+  }
 
   // Load existing official track IDs from database
   const trackMappings = await pool.query(`SELECT track_id FROM track_mapping WHERE is_official = TRUE`);
