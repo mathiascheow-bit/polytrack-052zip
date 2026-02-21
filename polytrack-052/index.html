@@ -28,6 +28,33 @@
       html, body{ margin:0; height:100%; background:#000; color:#eaf4ff; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; }
       body{ overflow:hidden; }
 
+      /* Admin Banner */
+      #adminBanner {
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 10002;
+        background: rgba(0, 0, 0, 0.85);
+        border: 2px solid #5ee1ff;
+        border-radius: 12px;
+        padding: 15px 30px;
+        color: #fff;
+        font-weight: bold;
+        text-align: center;
+        box-shadow: 0 0 20px rgba(94, 225, 255, 0.4);
+        display: none;
+        pointer-events: none;
+        max-width: 80%;
+        animation: slide-down 0.5s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+      }
+      @keyframes slide-down {
+        from { top: -100px; opacity: 0; }
+        to { top: 20px; opacity: 1; }
+      }
+      .banner-content { font-size: 18px; }
+      .banner-sub { font-size: 12px; color: #5ee1ff; margin-top: 4px; opacity: 0.8; }
+
       /* Lock Mode Overlay */
       #lockOverlay {
         position: fixed;
@@ -280,6 +307,10 @@
   </head>
 
   <body>
+    <div id="adminBanner">
+      <div class="banner-content" id="bannerText"></div>
+      <div class="banner-sub">NOTICE FROM ADMIN</div>
+    </div>
     <div id="lockOverlay">
       <h1>Access Locked</h1>
       <p>Please enter the password to continue.</p>
@@ -617,6 +648,69 @@
 
       // Leave warning
       window.onbeforeunload = () => "Are you sure you want to leave? Your session may be interrupted.";
+
+      // Banner Notification Logic
+      (function() {
+        const banner = document.getElementById('adminBanner');
+        const bannerText = document.getElementById('bannerText');
+        let currentBannerId = null;
+        let lastShownAt = 0;
+        let isCurrentlyVisible = false;
+
+        async function fetchBanner() {
+          try {
+            const response = await fetch('/api/banner');
+            const data = await response.json();
+            
+            if (!data) {
+              hideBanner();
+              currentBannerId = null;
+              return;
+            }
+
+            if (data.id !== currentBannerId) {
+              currentBannerId = data.id;
+              lastShownAt = 0; // Reset cycle for new banner
+            }
+
+            checkCycle(data);
+          } catch (e) {
+            console.error('Error fetching banner:', e);
+          }
+        }
+
+        function checkCycle(data) {
+          const now = Date.now();
+          const frequencyMs = data.frequency * 60 * 1000;
+          const durationMs = data.duration * 1000;
+
+          // If never shown or it's time to repeat
+          if (lastShownAt === 0 || (now - lastShownAt) >= frequencyMs) {
+            showBanner(data.message, durationMs);
+            lastShownAt = now;
+          }
+        }
+
+        function showBanner(message, durationMs) {
+          if (isCurrentlyVisible) return;
+          isCurrentlyVisible = true;
+          bannerText.textContent = message;
+          banner.style.display = 'block';
+          
+          setTimeout(() => {
+            hideBanner();
+          }, durationMs);
+        }
+
+        function hideBanner() {
+          banner.style.display = 'none';
+          isCurrentlyVisible = false;
+        }
+
+        // Check for banner every 5 seconds
+        setInterval(fetchBanner, 5000);
+        fetchBanner();
+      })();
 
     </script>
 

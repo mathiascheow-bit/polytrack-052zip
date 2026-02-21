@@ -112,6 +112,21 @@ async function initDatabase() {
     )
   `);
 
+  // Banners table handled manually or if not exists
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS banners (
+        id SERIAL PRIMARY KEY,
+        message TEXT NOT NULL,
+        duration INTEGER NOT NULL,
+        frequency INTEGER NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+  } catch (e) {
+    console.log('Banners table already exists or error creating:', e.message);
+  }
+
   // Load existing official track IDs from database
   const trackMappings = await pool.query(`SELECT track_id FROM track_mapping WHERE is_official = TRUE`);
   for (const row of trackMappings.rows) {
@@ -667,6 +682,46 @@ function encodeRecordingFromRawInput(rawText) {
 
 app.get('/admin.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'admin.html'));
+});
+
+app.get('/api/banner', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM banners ORDER BY created_at DESC LIMIT 1');
+    res.json(result.rows[0] || null);
+  } catch (error) {
+    console.error('Error fetching banner:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.post('/api/admin/banner', async (req, res) => {
+  const { password, message, duration, frequency } = req.body;
+  if (password !== ADMIN_PASSWORD) return res.status(403).json({ error: 'Invalid password' });
+
+  try {
+    await pool.query('DELETE FROM banners');
+    const result = await pool.query(
+      'INSERT INTO banners (message, duration, frequency) VALUES ($1, $2, $3) RETURNING *',
+      [message, parseInt(duration), parseInt(frequency)]
+    );
+    res.json({ success: true, banner: result.rows[0] });
+  } catch (error) {
+    console.error('Error creating banner:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.delete('/api/admin/banner', async (req, res) => {
+  const { password } = req.body;
+  if (password !== ADMIN_PASSWORD) return res.status(403).json({ error: 'Invalid password' });
+
+  try {
+    await pool.query('DELETE FROM banners');
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting banner:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 app.post('/api/admin/verify', (req, res) => {

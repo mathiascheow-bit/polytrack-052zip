@@ -204,6 +204,7 @@
         <div class="tab active" data-tab="add">Add Recording</div>
         <div class="tab" data-tab="ai">AI Test Driver</div>
         <div class="tab" data-tab="manage">Manage Entries</div>
+        <div class="tab" data-tab="banner">Banner System</div>
       </div>
 
       <div class="tab-content active" id="tab-add">
@@ -309,6 +310,33 @@ Keys: w=accelerate, a=left, s=brake, d=right"></textarea>
           <div class="no-entries">Loading...</div>
         </div>
       </div>
+
+      <div class="tab-content" id="tab-banner">
+        <p style="color:#8899aa; margin-bottom:18px; font-size:14px;">Manage the global banner notification system. The banner will appear for all players and repeat based on the frequency you set.</p>
+        
+        <div class="form-group">
+          <label>Banner Message</label>
+          <input type="text" id="bannerMessage" placeholder="e.g. Server maintenance in 10 minutes!" maxlength="200">
+        </div>
+
+        <div class="form-group">
+          <label>Display Duration (seconds)</label>
+          <input type="number" id="bannerDuration" value="10" min="1" max="3600">
+          <div class="hint">How long the banner stays on screen per appearance.</div>
+        </div>
+
+        <div class="form-group">
+          <label>Repeat Frequency (minutes)</label>
+          <input type="number" id="bannerFrequency" value="30" min="1" max="1440">
+          <div class="hint">How often the banner should reappear.</div>
+        </div>
+
+        <div style="display:flex; gap:10px;">
+          <button class="btn btn-primary" id="saveBannerBtn">Save & Start Cycle</button>
+          <button class="btn btn-danger" id="deleteBannerBtn" style="padding: 12px 28px; font-size: 15px;">Delete Banner</button>
+        </div>
+        <div class="status-msg" id="bannerStatus"></div>
+      </div>
     </div>
   </div>
 
@@ -362,6 +390,55 @@ Keys: w=accelerate, a=left, s=brake, d=right"></textarea>
       const sel = e.target;
       if (sel.value) {
         document.getElementById('playerName').value = sel.options[sel.selectedIndex].dataset.name;
+      }
+    });
+
+    document.getElementById('saveBannerBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('saveBannerBtn');
+      const status = document.getElementById('bannerStatus');
+      const message = document.getElementById('bannerMessage').value.trim();
+      const duration = document.getElementById('bannerDuration').value;
+      const frequency = document.getElementById('bannerFrequency').value;
+
+      if (!message) { showStatus(status, 'error', 'Enter a banner message'); return; }
+
+      btn.disabled = true;
+      try {
+        const res = await fetch('/api/admin/banner', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: adminPassword, message, duration, frequency })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showStatus(status, 'success', 'Banner saved and cycle started!');
+        } else {
+          showStatus(status, 'error', data.error || 'Failed to save banner');
+        }
+      } catch (e) {
+        showStatus(status, 'error', 'Connection error');
+      }
+      btn.disabled = false;
+    });
+
+    document.getElementById('deleteBannerBtn').addEventListener('click', async () => {
+      if (!confirm('Are you sure you want to delete the banner? This will stop the cycle for all players.')) return;
+      const status = document.getElementById('bannerStatus');
+      try {
+        const res = await fetch('/api/admin/banner', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: adminPassword })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showStatus(status, 'success', 'Banner deleted successfully!');
+          document.getElementById('bannerMessage').value = '';
+        } else {
+          showStatus(status, 'error', data.error || 'Failed to delete banner');
+        }
+      } catch (e) {
+        showStatus(status, 'error', 'Connection error');
       }
     });
 
