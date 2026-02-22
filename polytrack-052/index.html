@@ -506,68 +506,6 @@
         const closeBtn = document.getElementById('closeOverallLeaderboard');
         const listEl = document.getElementById('overallLeaderboardList');
 
-        const chatPanel = document.getElementById('chatPanel');
-        const closeChatBtn = document.getElementById('closeChat');
-        const chatMessagesEl = document.getElementById('chatMessages');
-        const chatInput = document.getElementById('chatInput');
-        const sendChatBtn = document.getElementById('sendChatBtn');
-
-        async function loadChat() {
-          try {
-            const response = await fetch('/api/chat');
-            const data = await response.json();
-            
-            chatMessagesEl.innerHTML = data.map(msg => `
-              <div class="chat-msg">
-                <div class="chat-msg-header">
-                  <span class="chat-msg-user">${msg.name}</span>
-                  <span class="chat-msg-time">${new Date(msg.created_at).toLocaleTimeString()}</span>
-                </div>
-                <div class="chat-msg-text">${msg.message}</div>
-              </div>
-            `).join('');
-            chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
-          } catch (e) {
-            console.error('Error loading chat:', e);
-          }
-        }
-
-        async function sendChat() {
-          const msg = chatInput.value.trim();
-          if (!msg) return;
-          
-          const userToken = localStorage.getItem('polytrack_user_token');
-          if (!userToken) return;
-
-          try {
-            const response = await fetch('/api/chat', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ userToken, message: msg })
-            });
-            if (response.ok) {
-              chatInput.value = '';
-              loadChat();
-            }
-          } catch (e) {
-            console.error('Error sending chat:', e);
-          }
-        }
-
-        sendChatBtn.onclick = sendChat;
-        chatInput.onkeydown = (e) => { if (e.key === 'Enter') sendChat(); };
-        closeChatBtn.onclick = () => {
-          chatPanel.style.display = 'none';
-          clearInterval(chatInterval);
-        };
-        
-        let chatInterval = null;
-        function openChat() {
-          chatPanel.style.display = 'block';
-          loadChat();
-          chatInterval = setInterval(loadChat, 3000);
-        }
-
         async function loadOverallLeaderboard() {
           listEl.innerHTML = '<p style="color:#aaa;text-align:center;font-size:18px;">Loading...</p>';
           try {
@@ -648,9 +586,6 @@
               // Clone the whole wrapper structure
               const rankBtnWrapper = buttonWrapper.cloneNode(true);
               rankBtnWrapper.id = 'injectedRankingsBtn';
-              
-              const blogBtnWrapper = buttonWrapper.cloneNode(true);
-              blogBtnWrapper.id = 'injectedBlogBtn';
 
               // Find and update all text nodes to say "Rankings"
               const walker = document.createTreeWalker(rankBtnWrapper, NodeFilter.SHOW_TEXT, null, false);
@@ -675,12 +610,6 @@
               svgs.forEach(svg => {
                 svg.innerHTML = '<path d="M5 3h14v2h-1v1c0 2.55-1.16 4.83-3 6.32V14h-6v-1.68c-1.84-1.49-3-3.77-3-6.32V5H5V3zm3 3v1c0 1.97.83 3.75 2.16 5H13.84c1.33-1.25 2.16-3.03 2.16-5V6H8zm-4 13h16v2H4v-2zm8-4c1.1 0 2 .9 2 2H10c0-1.1.9-2 2-2z" fill="currentColor"/>';
               });
-
-              // Update Blog SVG to chat bubble
-              const blogSvgs = blogBtnWrapper.querySelectorAll('svg');
-              blogSvgs.forEach(svg => {
-                svg.innerHTML = '<path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" fill="currentColor"/>';
-              });
               
               // Make clickable
               rankBtnWrapper.style.cursor = 'pointer';
@@ -689,17 +618,9 @@
                 e.stopPropagation();
                 openPanel();
               };
-
-              blogBtnWrapper.style.cursor = 'pointer';
-              blogBtnWrapper.onclick = (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                openChat();
-              };
               
               // Insert as a sibling to the existing buttons at the row level
               rowContainer.appendChild(rankBtnWrapper);
-              rowContainer.appendChild(blogBtnWrapper);
             }
           }
         }
