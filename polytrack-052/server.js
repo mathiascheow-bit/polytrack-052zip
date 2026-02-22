@@ -127,6 +127,20 @@ async function initDatabase() {
     console.log('Banners table already exists or error creating:', e.message);
   }
 
+  // Chats table handled manually or if not exists
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS chats (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id),
+        message TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+  } catch (e) {
+    console.log('Chats table already exists or error creating:', e.message);
+  }
+
   // Load existing official track IDs from database
   const trackMappings = await pool.query(`SELECT track_id FROM track_mapping WHERE is_official = TRUE`);
   for (const row of trackMappings.rows) {
@@ -720,6 +734,42 @@ app.delete('/api/admin/banner', async (req, res) => {
     res.json({ success: true });
   } catch (error) {
     console.error('Error deleting banner:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.get('/api/chat', async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT c.id, u.name, u.token_hash as "userId", c.message, c.created_at, u.car_colors as "carColors"
+      FROM chats c
+      JOIN users u ON c.user_id = u.id
+      ORDER BY c.created_at DESC
+      LIMIT 50
+    `);
+    res.json(result.rows.reverse());
+  } catch (error) {
+    console.error('Error fetching chat:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.post('/api/chat', async (req, res) => {
+  try {
+    const { userToken, message } = req.body;
+    if (!userToken || !message || message.trim().length === 0) {
+      return res.status(400).json({ error: 'Missing token or message' });
+    }
+
+    const user = await getOrCreateUser(userToken);
+    const result = await pool.query(
+      'INSERT INTO chats (user_id, message) VALUES ($1, $2) RETURNING *',
+      [user.id, message.substring(0, 200)]
+    );
+    
+    res.json({ success: true, message: result.rows[0] });
+  } catch (error) {
+    console.error('Error posting chat:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
