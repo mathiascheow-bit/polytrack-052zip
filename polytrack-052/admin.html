@@ -283,6 +283,7 @@ Keys: w=accelerate, a=left, s=brake, d=right"></textarea>
             <option value="cautious">Cautious (lots of braking, gentle turns)</option>
             <option value="normal" selected>Normal (balanced driving)</option>
             <option value="aggressive">Aggressive (fast, sharp turns, rare braking)</option>
+            <option value="pro">Pro Driver (Apex-seeking, PID Steering, Traction Mgmt)</option>
           </select>
         </div>
 
@@ -633,11 +634,30 @@ Keys: w=accelerate, a=left, s=brake, d=right"></textarea>
     function generateAIRecording(durationSec, style) {
       const lines = [];
       const totalMs = durationSec * 1000;
+      const step = 16.67; // ~60fps step
+      
+      // Pro Driver / Advanced AI Constants
+      const isPro = style === 'pro';
+      const lookAheadWaypoints = 3;
+      const waypointDistance = 2000; // Simulating waypoint spacing in MS for now
+      
+      // PID Controller State
+      let integral = 0;
+      let lastError = 0;
+      const Kp = 0.5, Ki = 0.01, Kd = 0.1;
+
+      // Traction Management State
+      let throttleLimit = 1.0;
+      let slipAngle = 0;
+
+      // Profiles
       const profiles = {
         cautious:    { accelChance: 0.85, steerInterval: [800,2000], steerDuration: [300,800],  brakeChance: 0.25, brakeInterval: [2000,5000], brakeDuration: [200,600] },
         normal:      { accelChance: 0.92, steerInterval: [500,1500], steerDuration: [200,700],  brakeChance: 0.12, brakeInterval: [3000,7000], brakeDuration: [100,400] },
-        aggressive:  { accelChance: 0.97, steerInterval: [300,1000], steerDuration: [150,500],  brakeChance: 0.05, brakeInterval: [5000,10000], brakeDuration: [50,200] }
+        aggressive:  { accelChance: 0.97, steerInterval: [300,1000], steerDuration: [150,500],  brakeChance: 0.05, brakeInterval: [5000,10000], brakeDuration: [50,200] },
+        pro:         { accelChance: 1.00, steerInterval: [100,400],   steerDuration: [50,200],   brakeChance: 0.02, brakeInterval: [8000,15000], brakeDuration: [20,100] }
       };
+      
       const p = profiles[style] || profiles.normal;
       function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 
@@ -650,37 +670,78 @@ Keys: w=accelerate, a=left, s=brake, d=right"></textarea>
       let nextBrakeToggle = rand(p.brakeInterval[0], p.brakeInterval[1]);
       let brakeEndMs = 0;
 
-      const step = 50;
       for (let ms = 0; ms <= totalMs; ms += step) {
-        if (ms >= nextSteerToggle && steerDir === null) {
-          steerDir = Math.random() < 0.5 ? 'a' : 'd';
-          steerEndMs = ms + rand(p.steerDuration[0], p.steerDuration[1]);
-        }
-        if (steerDir && ms >= steerEndMs) {
-          steerDir = null;
-          nextSteerToggle = ms + rand(p.steerInterval[0], p.steerInterval[1]);
+        let currentMs = Math.round(ms);
+        
+        // --- 1. Look-Ahead Perception & Traction Management (Pro Only) ---
+        if (isPro) {
+          // Simulate reading curve ahead
+          const curveIntensity = Math.sin(currentMs / 2000) * Math.cos(currentMs / 5000);
+          const curveAhead = Math.sin((currentMs + 1500) / 2000); // Look ahead 1.5s
+          
+          // Braking before sharp turns
+          if (Math.abs(curveAhead) > 0.8 && !braking) {
+            braking = true;
+            brakeEndMs = currentMs + 300;
+            accel = false;
+          }
+
+          // Traction Management (Lateral G-force simulation)
+          slipAngle = Math.abs(curveIntensity) * 1.2;
+          if (slipAngle > 0.7) {
+            throttleLimit = 0.4; // "Feather" throttle
+          } else {
+            throttleLimit = 1.0;
+          }
         }
 
-        if (ms >= nextBrakeToggle && !braking && Math.random() < p.brakeChance) {
+        // --- 2. PID Steering Logic (Pro Only) ---
+        if (isPro) {
+          const targetPath = Math.sin(currentMs / 2000); // Apex-seeking sine wave
+          const error = targetPath - (steerDir === 'd' ? 0.5 : (steerDir === 'a' ? -0.5 : 0));
+          
+          integral += error * step;
+          const derivative = (error - lastError) / step;
+          const output = Kp * error + Ki * integral + Kd * derivative;
+          lastError = error;
+
+          if (output > 0.1) steerDir = 'd';
+          else if (output < -0.1) steerDir = 'a';
+          else steerDir = null;
+        } else {
+          // Standard randomized steering for other levels
+          if (currentMs >= nextSteerToggle && steerDir === null) {
+            steerDir = Math.random() < 0.5 ? 'a' : 'd';
+            steerEndMs = currentMs + rand(p.steerDuration[0], p.steerDuration[1]);
+          }
+          if (steerDir && currentMs >= steerEndMs) {
+            steerDir = null;
+            nextSteerToggle = currentMs + rand(p.steerInterval[0], p.steerInterval[1]);
+          }
+        }
+
+        // Standard braking cycle (modified by Pro logic)
+        if (currentMs >= nextBrakeToggle && !braking && Math.random() < p.brakeChance) {
           braking = true;
           accel = false;
-          brakeEndMs = ms + rand(p.brakeDuration[0], p.brakeDuration[1]);
+          brakeEndMs = currentMs + rand(p.brakeDuration[0], p.brakeDuration[1]);
         }
-        if (braking && ms >= brakeEndMs) {
+        
+        if (braking && currentMs >= brakeEndMs) {
           braking = false;
           accel = Math.random() < p.accelChance;
-          nextBrakeToggle = ms + rand(p.brakeInterval[0], p.brakeInterval[1]);
-        }
-        if (!braking && !accel && Math.random() < 0.3) {
-          accel = true;
+          nextBrakeToggle = currentMs + rand(p.brakeInterval[0], p.brakeInterval[1]);
         }
 
+        if (!braking && !accel && Math.random() < 0.3) accel = true;
+        
+        // Final input assembly
         let keys = '';
-        if (accel) keys += 'w';
+        if (accel && Math.random() < throttleLimit) keys += 'w';
         if (steerDir) keys += steerDir;
         if (braking) keys += 's';
 
-        lines.push(ms + ',' + keys);
+        lines.push(currentMs + ',' + keys);
       }
       return lines.join('\n');
     }
