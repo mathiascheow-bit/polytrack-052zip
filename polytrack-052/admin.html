@@ -786,10 +786,11 @@ Keys: w=accelerate, a=left, s=brake, d=right"></textarea>
 
     document.getElementById('aiTestBtn').addEventListener('click', async () => {
       const btn = document.getElementById('aiTestBtn');
-      const style = document.getElementById('aiStyle').value;
+      const aiStyleVal = document.getElementById('aiStyle').value;
 
-      if (style === 'interactive' && btn.textContent !== 'Finish & Submit') {
-        const duration = parseInt(document.getElementById('aiDuration').value);
+      if (aiStyleVal === 'interactive' && btn.textContent !== 'Finish & Submit') {
+        const durationInput = document.getElementById('aiDuration').value;
+        const duration = parseInt(durationInput);
         let timeLeft = duration;
         btn.textContent = `Driving... (${timeLeft}s)`;
         btn.disabled = true;
@@ -818,17 +819,17 @@ Keys: w=accelerate, a=left, s=brake, d=right"></textarea>
       const status = document.getElementById('aiStatus');
       const name = document.getElementById('aiDriverName').value.trim();
       const trackId = document.getElementById('aiTrackSelect').value;
-      const duration = parseInt(document.getElementById('aiDuration').value) || 30;
-      const style = document.getElementById('aiStyle').value;
+      const finalDuration = parseInt(document.getElementById('aiDuration').value) || 30;
+      const finalStyle = document.getElementById('aiStyle').value;
 
       if (!name) { showStatus(status, 'error', 'Enter a driver name'); return; }
       if (!trackId) { showStatus(status, 'error', 'Select a track'); return; }
-      if (duration < 5 || duration > 300) { showStatus(status, 'error', 'Duration must be 5–300 seconds'); return; }
+      if (finalDuration < 5 || finalDuration > 300) { showStatus(status, 'error', 'Duration must be 5–300 seconds'); return; }
 
       btn.disabled = true;
       btn.textContent = 'Generating & Submitting...';
 
-      const rawRecording = generateAIRecording(duration, style);
+      const rawRecording = generateAIRecording(finalDuration, finalStyle);
 
       document.getElementById('aiPreview').style.display = 'block';
       const previewLines = rawRecording.split('\n');
