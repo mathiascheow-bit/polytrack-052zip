@@ -259,6 +259,13 @@ Keys: w=accelerate, a=left, s=brake, d=right"></textarea>
       <div class="tab-content" id="tab-ai">
         <p style="color:#8899aa; margin-bottom:18px; font-size:14px;">Generate a simulated AI driver recording and submit it to the leaderboard. The AI produces randomized driving inputs (accelerate, steer, brake) to create a test ghost.</p>
 
+        <div id="interactiveInstructions" style="display:none; background:rgba(94, 225, 255, 0.1); border:1px solid #5ee1ff; padding:15px; border-radius:8px; margin-bottom:20px; color:#5ee1ff;">
+          <strong>Interactive Mode Active!</strong><br>
+          1. Use <strong>W, A, S, D</strong> to drive your car.<br>
+          2. The timer starts when you press the button below.<br>
+          3. Drive until the timer ends, then click "Run AI Test Driver" to submit your own race!
+        </div>
+
         <div class="form-group">
           <label>Driver Name</label>
           <input type="text" id="aiDriverName" placeholder="e.g. AI Bot 1" maxlength="50">
@@ -284,6 +291,7 @@ Keys: w=accelerate, a=left, s=brake, d=right"></textarea>
             <option value="normal" selected>Normal (balanced driving)</option>
             <option value="aggressive">Aggressive (fast, sharp turns, rare braking)</option>
             <option value="pro">Pro Driver (Apex-seeking, PID Steering, Traction Mgmt)</option>
+            <option value="interactive">Interactive Racer (Keyboard Playable!)</option>
           </select>
         </div>
 
@@ -632,6 +640,9 @@ Keys: w=accelerate, a=left, s=brake, d=right"></textarea>
     }
 
     function generateAIRecording(durationSec, style) {
+      if (style === 'interactive') {
+        return window.capturedInteractiveRecording || "";
+      }
       const lines = [];
       const totalMs = durationSec * 1000;
       const step = 16.67; // ~60fps step
@@ -758,8 +769,52 @@ Keys: w=accelerate, a=left, s=brake, d=right"></textarea>
       }
     }
 
+    document.getElementById('aiStyle').addEventListener('change', (e) => {
+      const instr = document.getElementById('interactiveInstructions');
+      instr.style.display = e.target.value === 'interactive' ? 'block' : 'none';
+    });
+
+    let keysPressed = new Set();
+    window.addEventListener('keydown', (e) => {
+      const k = e.key.toLowerCase();
+      if (['w','a','s','d'].includes(k)) keysPressed.add(k);
+    });
+    window.addEventListener('keyup', (e) => {
+      const k = e.key.toLowerCase();
+      if (['w','a','s','d'].includes(k)) keysPressed.delete(k);
+    });
+
     document.getElementById('aiTestBtn').addEventListener('click', async () => {
       const btn = document.getElementById('aiTestBtn');
+      const style = document.getElementById('aiStyle').value;
+
+      if (style === 'interactive' && btn.textContent !== 'Finish & Submit') {
+        const duration = parseInt(document.getElementById('aiDuration').value);
+        let timeLeft = duration;
+        btn.textContent = `Driving... (${timeLeft}s)`;
+        btn.disabled = true;
+        
+        window.capturedInteractiveRecording = "";
+        const startTime = Date.now();
+        const interval = setInterval(() => {
+          const elapsed = Date.now() - startTime;
+          const currentKeys = Array.from(keysPressed).sort().join('');
+          window.capturedInteractiveRecording += `${elapsed},${currentKeys}\n`;
+          
+          const remaining = Math.max(0, duration - Math.floor(elapsed / 1000));
+          if (remaining !== timeLeft) {
+            timeLeft = remaining;
+            btn.textContent = `Driving... (${timeLeft}s)`;
+          }
+
+          if (elapsed >= duration * 1000) {
+            clearInterval(interval);
+            btn.textContent = 'Finish & Submit';
+            btn.disabled = false;
+          }
+        }, 16.67);
+        return;
+      }
       const status = document.getElementById('aiStatus');
       const name = document.getElementById('aiDriverName').value.trim();
       const trackId = document.getElementById('aiTrackSelect').value;
