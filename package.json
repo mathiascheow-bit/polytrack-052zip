@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "@replit/database": "^3.0.1"
+  }
+}
