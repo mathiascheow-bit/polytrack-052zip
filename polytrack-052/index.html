@@ -658,27 +658,41 @@
           try {
             const res = await fetch('/api/chat');
             const data = await res.json();
+
+            // Identify the current user to highlight their messages
             const myToken = localStorage.getItem('polytrack_user_token');
-            // We'll use a simple hash for comparison if possible, or just compare names/tokens if available
-            // For now, let's fetch user info to know who "we" are
             const userRes = await fetch(`/user?userToken=${myToken}`);
             const userData = await userRes.json();
-            
-            chatMessages.innerHTML = data.map(m => `
-              <div class="msg-group ${userData && m.name === userData.name ? 'own' : 'other'}">
-                <span class="msg-user" style="font-size: 10px; color: ${userData && m.name === userData.name ? '#5ee1ff' : '#8899aa'}">${m.name}</span>
-                <div class="msg-bubble">${m.message}</div>
-              </div>
-            `).join('');
+
+            // Use the profile name if it exists, otherwise use 'Player'
+            const myName = (userData && userData.name) ? userData.name : 'Player';
+
+            chatMessages.innerHTML = data.map(m => {
+              const isMe = m.name === myName;
+              return `
+                <div class="msg-group ${isMe ? 'own' : 'other'}">
+                  <span class="msg-user" style="font-size: 10px; color: ${isMe ? '#5ee1ff' : '#8899aa'}">
+                    ${m.name}
+                  </span>
+                  <div class="msg-bubble">${m.message}</div>
+                </div>
+              `;
+            }).join('');
+
             chatMessages.scrollTop = chatMessages.scrollHeight;
-          } catch (e) {}
+          } catch (e) {
+            console.error("Chat error:", e);
+          }
         }
 
         async function sendMessage() {
           const msg = chatInput.value.trim();
           if (!msg) return;
-          const token = localStorage.getItem('polytrack_user_token');
-          if (!token) return alert('Please play at least once to chat!');
+          let token = localStorage.getItem('polytrack_user_token');
+          if (!token) {
+            token = 'guest_' + Math.random().toString(36).slice(2) + Date.now();
+            localStorage.setItem('polytrack_user_token', token);
+          }
           
           try {
             await fetch('/api/chat', {

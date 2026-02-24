@@ -681,11 +681,16 @@ app.post('/api/chat', async (req, res) => {
   }
 
   try {
+    // 1. Get the user from the database using the token
     const user = await getOrCreateUser(userToken);
+
+    // 2. Insert the message tied to that user's ID
+    // The GET /api/chat route already handles joining this with the users table to get the name
     await pool.query(
       'INSERT INTO chat_messages (user_id, message) VALUES ($1, $2)',
       [user.id, message.substring(0, 500)]
     );
+
     res.json({ success: true });
   } catch (error) {
     console.error('Error sending message:', error.message);
