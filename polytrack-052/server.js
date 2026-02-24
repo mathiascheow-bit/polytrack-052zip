@@ -164,6 +164,16 @@ async function initDatabase() {
       CREATE INDEX IF NOT EXISTS idx_leaderboard_frames ON leaderboard(track_id, frames)
     `);
 
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS chat_messages (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id),
+        message TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    console.log('✅ chat_messages table ready');
+
     const trackMappings = await pool.query(`SELECT track_id FROM track_mapping WHERE is_official = TRUE`);
     for (const row of trackMappings.rows) {
       officialTrackIds.add(row.track_id);
@@ -644,6 +654,43 @@ app.post('/user', async (req, res) => {
 
 app.post('/verifyRecordings', async (req, res) => {
   res.json({ exhaustive: 1, estimatedRemaining: 0, unverifiedRecordings: [] });
+});
+
+// ===== CHAT API =====
+
+app.get('/api/chat', async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT c.id, c.message, c.created_at, u.name, u.token_hash as "userId"
+      FROM chat_messages c
+      JOIN users u ON c.user_id = u.id
+      ORDER BY c.created_at DESC
+      LIMIT 50
+    `);
+    res.json(result.rows.reverse());
+  } catch (error) {
+    console.error('Error fetching chat:', error.message);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.post('/api/chat', async (req, res) => {
+  const { userToken, message } = req.body;
+  if (!userToken || !message || message.trim().length === 0) {
+    return res.status(400).json({ error: 'Missing token or message' });
+  }
+
+  try {
+    const user = await getOrCreateUser(userToken);
+    await pool.query(
+      'INSERT INTO chat_messages (user_id, message) VALUES ($1, $2)',
+      [user.id, message.substring(0, 500)]
+    );
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error sending message:', error.message);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 // ===== TRACKS =====

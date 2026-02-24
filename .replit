@@ -34,10 +34,6 @@ waitForPort = 3000
 localPort = 3000
 externalPort = 3000
 
-[[ports]]
-localPort = 3000
-externalPort = 80
-
 [deployment]
 run = ["sh", "-c", "cd polytrack-052 && node server.js"]
 deploymentTarget = "cloudrun"
