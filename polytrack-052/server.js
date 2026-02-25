@@ -698,6 +698,58 @@ app.post('/api/chat', async (req, res) => {
   }
 });
 
+// ===== CHAT SYSTEM =====
+
+app.get('/api/chat', async (req, res) => {
+  const { userToken } = req.query;
+  try {
+    const result = await pool.query(`
+      SELECT c.id, u.name, u.token_hash, c.message, c.created_at
+      FROM chat_messages c
+      JOIN users u ON c.user_id = u.id
+      ORDER BY c.created_at DESC
+      LIMIT 100
+    `);
+
+    let myTokenHash = null;
+    if (userToken) {
+      myTokenHash = hashToken(userToken);
+    }
+
+    const messages = result.rows.reverse().map(row => ({
+      id: row.id,
+      name: row.name,
+      message: row.message,
+      isOwn: myTokenHash && row.token_hash === myTokenHash,
+      createdAt: row.created_at
+    }));
+
+    res.json(messages);
+  } catch (error) {
+    console.error('Error fetching chat:', error.message);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.post('/api/chat', async (req, res) => {
+  const { userToken, message } = req.body;
+  if (!userToken || !message) {
+    return res.status(400).json({ error: 'Missing userToken or message' });
+  }
+
+  try {
+    const user = await getOrCreateUser(userToken);
+    await pool.query(
+      'INSERT INTO chat_messages (user_id, message) VALUES ($1, $2)',
+      [user.id, message]
+    );
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error sending chat message:', error.message);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // ===== TRACKS =====
 
 app.post('/api/register-track', async (req, res) => {

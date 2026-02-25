@@ -656,28 +656,18 @@
 
         async function loadChat() {
           try {
-            const res = await fetch('/api/chat');
+            const myToken = localStorage.getItem('polytrack_user_token');
+            const res = await fetch(`/api/chat?userToken=${myToken || ''}`);
             const data = await res.json();
 
-            // Identify the current user to highlight their messages
-            const myToken = localStorage.getItem('polytrack_user_token');
-            const userRes = await fetch(`/user?userToken=${myToken}`);
-            const userData = await userRes.json();
-
-            // Use the profile name if it exists, otherwise use 'Player'
-            const myName = (userData && userData.name) ? userData.name : 'Player';
-
-            chatMessages.innerHTML = data.map(m => {
-              const isMe = m.name === myName;
-              return `
-                <div class="msg-group ${isMe ? 'own' : 'other'}">
-                  <span class="msg-user" style="font-size: 10px; color: ${isMe ? '#5ee1ff' : '#8899aa'}">
-                    ${m.name}
-                  </span>
-                  <div class="msg-bubble">${m.message}</div>
-                </div>
-              `;
-            }).join('');
+            chatMessages.innerHTML = data.map(m => `
+              <div class="msg-group ${m.isOwn ? 'own' : 'other'}">
+                <span class="msg-user" style="font-size: 10px; color: ${m.isOwn ? '#5ee1ff' : '#8899aa'}">
+                  ${m.name}
+                </span>
+                <div class="msg-bubble">${m.message}</div>
+              </div>
+            `).join('');
 
             chatMessages.scrollTop = chatMessages.scrollHeight;
           } catch (e) {
