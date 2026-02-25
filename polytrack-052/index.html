@@ -183,17 +183,10 @@
       .msg-group {
         display: flex;
         flex-direction: column;
-        margin-bottom: 15px;
-        width: 100%; /* This allows the group to align its children to the left or right */
+        max-width: 70%;
       }
-      /* Your messages snap to the right */
-      .msg-group.own {
-        align-items: flex-end;
-      }
-      /* Friends' messages snap to the left */
-      .msg-group.other {
-        align-items: flex-start;
-      }
+      .msg-group.own { align-self: flex-end; align-items: flex-end; }
+      .msg-group.other { align-self: flex-start; align-items: flex-start; }
       
       .msg-user {
         font-size: 12px;
@@ -463,10 +456,6 @@
           <h2>Group Chat</h2>
           <span id="chatClose">✕</span>
         </div>
-        <div style="padding: 10px 0; display: flex; gap: 8px; border-bottom: 1px solid rgba(94, 225, 255, 0.1); margin-bottom: 10px;">
-          <input type="text" id="renameInput" placeholder="Change display name..." style="flex: 1; background: #1a1a1a; border: 1px solid #444; color: white; padding: 8px; border-radius: 6px;">
-          <button onclick="updateDisplayName()" style="background: var(--brand); color: black; border: none; padding: 0 15px; border-radius: 6px; cursor: pointer; font-weight: bold;">Save Name</button>
-        </div>
         <div id="chatMessages"></div>
         <div id="chatInputArea">
           <input type="text" id="chatInput" placeholder="Type a message...">
@@ -665,19 +654,21 @@
 
         chatClose.onclick = () => chatPanel.style.display = 'none';
 
-        
-        let myCachedData = null;
         async function loadChat() {
           try {
             const res = await fetch('/api/chat');
             const data = await res.json();
-            if (!myCachedData) {
-              const myToken = localStorage.getItem('polytrack_user_token');
-              const userRes = await fetch(`/user?userToken=${myToken}`);
-              myCachedData = await userRes.json();
-            }
+
+            // Identify the current user to highlight their messages
+            const myToken = localStorage.getItem('polytrack_user_token');
+            const userRes = await fetch(`/user?userToken=${myToken}`);
+            const userData = await userRes.json();
+
+            // Use the profile name if it exists, otherwise use 'Player'
+            const myName = (userData && userData.name) ? userData.name : 'Player';
+
             chatMessages.innerHTML = data.map(m => {
-              const isMe = myCachedData && String(m.userId) === String(myCachedData.id);
+              const isMe = m.name === myName;
               return `
                 <div class="msg-group ${isMe ? 'own' : 'other'}">
                   <span class="msg-user" style="font-size: 10px; color: ${isMe ? '#5ee1ff' : '#8899aa'}">
@@ -687,30 +678,11 @@
                 </div>
               `;
             }).join('');
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-          } catch (e) { console.error("Chat error:", e); }
-        }
 
-        async function updateDisplayName() {
-          const newName = document.getElementById('renameInput').value.trim();
-          if (!newName) return;
-          const token = localStorage.getItem('polytrack_user_token');
-          await fetch('/user', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userToken: token, name: newName })
-          });
-          myCachedData = null;
-          alert("Name updated!");
-          document.getElementById('renameInput').value = '';
-          loadChat();
-        }
-,
-            body: JSON.stringify({ userToken: token, name: newName })
-          });
-          alert("Name updated!");
-          document.getElementById('renameInput').value = '';
-          loadChat();
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+          } catch (e) {
+            console.error("Chat error:", e);
+          }
         }
 
         async function sendMessage() {
