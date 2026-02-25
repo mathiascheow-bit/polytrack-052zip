@@ -657,12 +657,12 @@
         async function loadChat() {
           try {
             const myToken = localStorage.getItem('polytrack_user_token');
-            const res = await fetch(`/api/chat?userToken=${myToken || ''}`);
+            const res = await fetch(`/api/chat?userToken=${encodeURIComponent(myToken || '')}`);
             const data = await res.json();
 
             chatMessages.innerHTML = data.map(m => `
               <div class="msg-group ${m.isOwn ? 'own' : 'other'}">
-                <span class="msg-user" style="font-size: 10px; color: ${m.isOwn ? '#5ee1ff' : '#8899aa'}">
+                <span class="msg-user" style="color: ${m.isOwn ? '#5ee1ff' : '#8899aa'}">
                   ${m.name}
                 </span>
                 <div class="msg-bubble">${m.message}</div>

@@ -266,7 +266,7 @@ async function getOrCreateUser(userToken) {
   let result = await pool.query('SELECT * FROM users WHERE user_token = $1', [userToken]);
   if (result.rows.length === 0) {
     result = await pool.query(
-      'INSERT INTO users (user_token, token_hash) VALUES ($1, $2) RETURNING *',
+      "INSERT INTO users (user_token, token_hash, name) VALUES ($1, $2, 'Player') RETURNING *",
       [userToken, tokenHash]
     );
   }
@@ -712,7 +712,7 @@ app.get('/api/chat', async (req, res) => {
     `);
 
     let myTokenHash = null;
-    if (userToken) {
+    if (userToken && userToken !== 'null' && userToken !== 'undefined') {
       myTokenHash = hashToken(userToken);
     }
 
