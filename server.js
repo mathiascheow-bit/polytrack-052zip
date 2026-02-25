@@ -1,3 +1,4 @@
+My Drive
 const express = require('express');
 const { Pool } = require('pg');
 const path = require('path');
@@ -1015,7 +1016,7 @@ app.use((req, res) => {
 
 // ===== START SERVER =====
 
-initDatabase().th  en(() => {
+initDatabase().then(() => {
   loadBannerOnStartup();
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Server running on port ${PORT}`);

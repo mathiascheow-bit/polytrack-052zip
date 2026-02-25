@@ -1,0 +1,304 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "user_token": "6b721acbfbad165cd99b27a04a3075089875dbc5d0bc7e1f79411ddf2808ed78",
+      "token_hash": "6a193184be5aecbae18812ded473a98d06c18cb0668f7af731b732e85c39b5dc",
+      "name": "Anonymous",
+      "car_colors": "5b9900ffffff131313666666",
+      "is_verifier": false,
+      "created_at": "2026-02-23T03:35:08.294Z"
+    },
+    {
+      "id": 2,
+      "user_token": "admin_15a485a747fdba16c5eebd035691b01a",
+      "token_hash": "de5633d9240d3251eccbb669a033b0ae6f4a146d5665447a262ce9138f304ece",
+      "name": "AI test",
+      "car_colors": "00aaff0044ff222222888888",
+      "is_verifier": false,
+      "created_at": "2026-02-23T03:36:23.324Z"
+    },
+    {
+      "id": 3,
+      "user_token": "admin_9ab4b8b31d9c6411c87fdd03339603b6",
+      "token_hash": "cb055af05bd627fa37e452c34f6b985450e2191445716778ded933ccb1101fe9",
+      "name": "AI test",
+      "car_colors": "00aaff0044ff222222888888",
+      "is_verifier": false,
+      "created_at": "2026-02-23T03:37:03.027Z"
+    },
+    {
+      "id": 4,
+      "user_token": "admin_94e0bf16a217ee72c3fd844da4d2061d",
+      "token_hash": "cd593ad04a4c9a4f3618d0c77749785c6b497f5bfb06a9d95051004164a5d430",
+      "name": "AI test",
+      "car_colors": "00aaff0044ff222222888888",
+      "is_verifier": false,
+      "created_at": "2026-02-23T03:37:36.140Z"
+    },
+    {
+      "id": 5,
+      "user_token": "admin_1286b8c50cd357be1178c9fe8aa49207",
+      "token_hash": "8d2aabcedfec094802646308c5a286ec74e2234127255a5b85dbfca054a09c33",
+      "name": "AI test",
+      "car_colors": "00aaff0044ff222222888888",
+      "is_verifier": false,
+      "created_at": "2026-02-23T03:37:38.417Z"
+    },
+    {
+      "id": 6,
+      "user_token": "admin_3df3e8f9b9b7207fd546412df6e021c1",
+      "token_hash": "41e1d7999bbe27cc68bf4dc5e8d5bed033fe3cdba3e0603e87f1a22e56b5e607",
+      "name": "AI test",
+      "car_colors": "00aaff0044ff222222888888",
+      "is_verifier": false,
+      "created_at": "2026-02-23T03:37:39.228Z"
+    },
+    {
+      "id": 7,
+      "user_token": "admin_b46fe1318a7687da06190d2bb7301f14",
+      "token_hash": "4c0b655bfb98862d96f814eecd5a61cc792299767bffb5bee2796674f8fb63b8",
+      "name": "AI test",
+      "car_colors": "00aaff0044ff222222888888",
+      "is_verifier": false,
+      "created_at": "2026-02-23T03:37:39.988Z"
+    },
+    {
+      "id": 8,
+      "user_token": "admin_5f0aaacd735d161f70e8189dc3d11bde",
+      "token_hash": "21bf7cc025d7d83e1a407d2ea9f15bed91d4360eec3a243fe7a2cefe308933f8",
+      "name": "AI test",
+      "car_colors": "00aaff0044ff222222888888",
+      "is_verifier": false,
+      "created_at": "2026-02-23T03:37:47.853Z"
+    },
+    {
+      "id": 10,
+      "user_token": "guest_hbptvc4lfpg1771928604166",
+      "token_hash": "95100eeabfc3110e240dfed38381173a5074a112ed08e9a4fc9c3f435ed37aa7",
+      "name": "Player",
+      "car_colors": "ff0000ff0000ff0000ff0000",
+      "is_verifier": false,
+      "created_at": "2026-02-24T10:23:25.913Z"
+    },
+    {
+      "id": 11,
+      "user_token": "guest_vp1d50d2g4h1771928639362",
+      "token_hash": "44724310f371d8a57d45906bfd15e8bc3cfdb50dfba2ada1071b78a130bbf9ea",
+      "name": "Player",
+      "car_colors": "ff0000ff0000ff0000ff0000",
+      "is_verifier": false,
+      "created_at": "2026-02-24T10:24:01.034Z"
+    },
+    {
+      "id": 12,
+      "user_token": "8647e32b63d388ae8ceddb06b13cd540561e467c2e4f096a4352372efd3455b1",
+      "token_hash": "a9d17e5d8c4d88b7df80cb7702b238728b3a91da2de8142cd9043a8b3c8d1a25",
+      "name": "hello",
+      "car_colors": "111a43ffffff131313666666",
+      "is_verifier": false,
+      "created_at": "2026-02-24T11:22:54.028Z"
+    },
+    {
+      "id": 9,
+      "user_token": "66a92f0b1487e4aece564c50f0c739bbf1a9c07f0d8ed5005042763e0bec8c9a",
+      "token_hash": "614ac4696b9e8bd6bb34b056aea9fb44bbd90f6a984eb9798217b5c3152d4e1a",
+      "name": "players",
+      "car_colors": "056183ffffff131313666666",
+      "is_verifier": false,
+      "created_at": "2026-02-24T09:51:23.419Z"
+    }
+  ],
+  "chat_messages": [
+    {
+      "id": 1,
+      "user_id": 10,
+      "message": "hello guys",
+      "created_at": "2026-02-24T10:23:25.938Z"
+    },
+    {
+      "id": 2,
+      "user_id": 10,
+      "message": "hello I am Mathias Cheow today I would like to share with you",
+      "created_at": "2026-02-24T10:23:41.904Z"
+    },
+    {
+      "id": 3,
+      "user_id": 11,
+      "message": "hello",
+      "created_at": "2026-02-24T10:24:01.038Z"
+    },
+    {
+      "id": 4,
+      "user_id": 10,
+      "message": "hello",
+      "created_at": "2026-02-24T10:57:09.526Z"
+    },
+    {
+      "id": 5,
+      "user_id": 10,
+      "message": "hello",
+      "created_at": "2026-02-24T10:58:58.319Z"
+    },
+    {
+      "id": 6,
+      "user_id": 11,
+      "message": "hello",
+      "created_at": "2026-02-24T11:00:04.753Z"
+    },
+    {
+      "id": 7,
+      "user_id": 10,
+      "message": "hello",
+      "created_at": "2026-02-24T11:21:33.595Z"
+    },
+    {
+      "id": 8,
+      "user_id": 10,
+      "message": "hello",
+      "created_at": "2026-02-24T11:21:57.429Z"
+    },
+    {
+      "id": 9,
+      "user_id": 10,
+      "message": "tesing",
+      "created_at": "2026-02-24T11:22:07.262Z"
+    },
+    {
+      "id": 10,
+      "user_id": 11,
+      "message": "check",
+      "created_at": "2026-02-24T11:22:46.661Z"
+    },
+    {
+      "id": 11,
+      "user_id": 11,
+      "message": "hello",
+      "created_at": "2026-02-24T11:22:58.844Z"
+    },
+    {
+      "id": 12,
+      "user_id": 11,
+      "message": "hello",
+      "created_at": "2026-02-24T11:26:06.161Z"
+    },
+    {
+      "id": 13,
+      "user_id": 11,
+      "message": "tes",
+      "created_at": "2026-02-24T11:26:09.418Z"
+    },
+    {
+      "id": 14,
+      "user_id": 10,
+      "message": "hello",
+      "created_at": "2026-02-24T23:48:01.476Z"
+    },
+    {
+      "id": 15,
+      "user_id": 10,
+      "message": "hello",
+      "created_at": "2026-02-24T23:48:51.669Z"
+    },
+    {
+      "id": 16,
+      "user_id": 10,
+      "message": "hello",
+      "created_at": "2026-02-24T23:49:05.748Z"
+    },
+    {
+      "id": 17,
+      "user_id": 10,
+      "message": "hello",
+      "created_at": "2026-02-24T23:49:13.902Z"
+    },
+    {
+      "id": 18,
+      "user_id": 11,
+      "message": "hello",
+      "created_at": "2026-02-24T23:50:42.269Z"
+    },
+    {
+      "id": 19,
+      "user_id": 11,
+      "message": "hello",
+      "created_at": "2026-02-24T23:52:47.380Z"
+    },
+    {
+      "id": 20,
+      "user_id": 10,
+      "message": "hello",
+      "created_at": "2026-02-25T02:40:58.895Z"
+    },
+    {
+      "id": 21,
+      "user_id": 10,
+      "message": "test",
+      "created_at": "2026-02-25T02:41:01.835Z"
+    },
+    {
+      "id": 22,
+      "user_id": 10,
+      "message": "from admin stop chatting in the chat or else I will",
+      "created_at": "2026-02-25T02:43:59.067Z"
+    },
+    {
+      "id": 23,
+      "user_id": 11,
+      "message": "hello",
+      "created_at": "2026-02-25T02:46:05.906Z"
+    },
+    {
+      "id": 24,
+      "user_id": 11,
+      "message": "from admin stop chatting in the chat or else I will",
+      "created_at": "2026-02-25T02:46:14.259Z"
+    },
+    {
+      "id": 25,
+      "user_id": 10,
+      "message": "hello",
+      "created_at": "2026-02-25T02:49:34.824Z"
+    },
+    {
+      "id": 26,
+      "user_id": 10,
+      "message": "from admin stop chatting in the chat or else I will",
+      "created_at": "2026-02-25T02:49:49.977Z"
+    },
+    {
+      "id": 27,
+      "user_id": 10,
+      "message": "hello",
+      "created_at": "2026-02-25T03:18:36.764Z"
+    },
+    {
+      "id": 28,
+      "user_id": 10,
+      "message": "hello",
+      "created_at": "2026-02-25T03:22:13.552Z"
+    },
+    {
+      "id": 29,
+      "user_id": 11,
+      "message": "from admin stop chatting in the chat or else I will",
+      "created_at": "2026-02-25T03:23:22.151Z"
+    },
+    {
+      "id": 30,
+      "user_id": 10,
+      "message": "hello",
+      "created_at": "2026-02-25T03:29:05.053Z"
+    }
+  ],
+  "chats": [],
+  "banners": [
+    {
+      "id": 11,
+      "message": "hello guys",
+      "duration": 10,
+      "frequency": 1,
+      "created_at": "2026-02-23T13:20:50.028Z"
+    }
+  ]
+}
