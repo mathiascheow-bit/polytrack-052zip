@@ -661,7 +661,7 @@ app.post('/verifyRecordings', async (req, res) => {
 app.get('/api/chat', async (req, res) => {
   try {
     const result = await pool.query(`
-      SELECT c.id, c.message, c.created_at, u.name, u.token_hash as "userId"
+      SELECT c.id, c.message, c.created_at, u.name, u.id AS "userId" 
       FROM chat_messages c
       JOIN users u ON c.user_id = u.id
       ORDER BY c.created_at DESC
